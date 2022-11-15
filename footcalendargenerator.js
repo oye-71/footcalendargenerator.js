@@ -85,6 +85,7 @@ class Match {
         this.awayTeam = away;
         this.homeScore = 0;
         this.awayScore = 0;
+        this.isPlayed = false;
     }
 
     /** Returns result of the match. If draw, returns null */
@@ -99,7 +100,9 @@ class Match {
 
     /** Returns both teams & scores in one line */
     toString() {
-        return `${this.homeTeam?.toString()} ${this.homeScore} - ${this.awayScore} ${this.awayTeam?.toString()}`;
+        return `${this.homeTeam?.toString()} ${this.isPlayed ? this.homeScore : ""} - ${
+            this.isPlayed ? this.awayScore : ""
+        } ${this.awayTeam?.toString()}`;
     }
 }
 
@@ -122,9 +125,21 @@ class Calendar {
         // Build instance, rotate half pos.
         for (let i = 0; i < occurences; i++) {
             const md = [];
-            md.push(new Match(pivot, teams[0]));
+            if (i % 2) {
+                // If pivot's last is away then home
+                md.push(new Match(pivot, teams[0]));
+            } else {
+                // If pivot's last is away then home
+                md.push(new Match(teams[0], pivot));
+            }
             for (let j = 1; j < (teams.length + 1) / 2; j++) {
-                md.push(new Match(teams[j], teams[teams.length - j]));
+                if (i !== 0 && matchDays[i - 1].some((m) => m.homeTeam) === teams[j]) {
+                    // If teams[j]'s last is home then away
+                    md.push(new Match(teams[teams.length - j], teams[j]));
+                } else {
+                    // If teams[j]'s last is away then home
+                    md.push(new Match(teams[j], teams[teams.length - j]));
+                }
             }
             matchDays.push(md);
             teams = this.rotate(teams);
@@ -212,6 +227,7 @@ class Championship {
                     match.homeTeam.draws++;
                     match.awayTeam.draws++;
                 }
+                match.isPlayed = true;
             }
         }
     }
@@ -297,14 +313,10 @@ class ScoreGenerator {
 
 // Tests Section
 let teams = [
-    new Team("France", 3),
-    new Team("Brésil", 4),
-    new Team("Allemagne", 3),
-    new Team("Argentine", 3),
-    new Team("Espagne", 3),
-    new Team("Angleterre", 3),
-    new Team("Sénégal", 2),
-    new Team("Italie", 3),
+    new Team("Olympique de Marseille", 1),
+    new Team("Sporting Club Portugal", 2),
+    new Team("Tottenham FC", 3),
+    new Team("Eintracht Francfort", 2),
 ];
 let championship = new Championship(true, ...teams);
 
